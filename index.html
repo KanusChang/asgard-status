@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>網頁神領</title>
+<link rel="icon" type="image/png" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<style>
+:root{--gold:#e2b45c;--gold2:#c9a35a;--ink:#f1e3c4;--dim:#9c855f}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;color:var(--ink);font-family:system-ui,"Microsoft JhengHei","PingFang TC","Noto Sans TC",sans-serif}
+body{min-height:100vh;min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px 16px;overflow-x:hidden;
+ background:radial-gradient(ellipse at 50% 30%,#3a2510 0%,#1a1008 55%,#0b0704 100%)}
+/* 背景的光點 */
+.sky{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+.sky i{position:absolute;bottom:-10px;width:4px;height:4px;border-radius:50%;background:#ffd98a;box-shadow:0 0 8px 2px rgba(255,200,110,.7);opacity:0;animation:rise linear infinite}
+@keyframes rise{0%{transform:translateY(0);opacity:0}10%{opacity:.9}90%{opacity:.5}100%{transform:translateY(-105vh);opacity:0}}
+.box{position:relative;width:min(540px,100%);padding:38px 30px 26px;text-align:center;
+ background:linear-gradient(180deg,#3a2614,#22160a);border:2px solid #b8894a;border-radius:12px;
+ box-shadow:0 0 0 6px #4a2f15,0 0 0 8px var(--gold2),0 24px 70px rgba(0,0,0,.75)}
+.box::before,.box::after{content:"";position:absolute;width:22px;height:22px;border:2px solid var(--gold);transform:rotate(45deg);background:#2b1c0d;top:-13px}
+.box::before{left:calc(50% - 11px)}
+.box::after{top:auto;bottom:-13px;left:calc(50% - 11px)}
+.icon{width:84px;height:84px;image-rendering:pixelated;border-radius:10px;filter:drop-shadow(0 3px 6px #000);animation:bob 3.2s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-5px)}}
+h1{margin:12px 0 4px;font-size:30px;letter-spacing:6px;color:transparent;background:linear-gradient(#fff3c8,var(--gold) 60%,#a8742a);-webkit-background-clip:text;background-clip:text}
+.sub{margin:0 0 18px;color:var(--dim);font-size:13px;letter-spacing:3px}
+.rule{height:1px;margin:0 auto 18px;width:70%;background:linear-gradient(90deg,transparent,var(--gold2),transparent)}
+.text{font-size:16px;line-height:1.85;white-space:pre-wrap}
+.until{margin:18px 0 0;padding:12px;border:1px solid rgba(201,163,90,.45);border-radius:8px;background:rgba(0,0,0,.22)}
+.until .lbl{font-size:13px;color:var(--dim)}
+.until .when{margin-top:2px;font-size:18px;color:#ffd98a;font-weight:600}
+.until .left{margin-top:4px;font-size:14px;color:#e8cf9a;font-variant-numeric:tabular-nums}
+.state{margin:16px 0 0;font-size:13px;color:#c9b27f;min-height:1.3em}
+.state .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#d9822b;margin-right:6px;vertical-align:1px;animation:blink 1.4s infinite}
+.state.up .dot{background:#5fd068;animation:none}
+@keyframes blink{50%{opacity:.25}}
+.btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+.btn{display:inline-block;padding:10px 20px;border-radius:8px;font-size:15px;text-decoration:none;color:#2a1a08;font-weight:600;
+ background:linear-gradient(#fbe3a2,#d9a54d);border:1px solid #f5d58e;box-shadow:0 2px 0 #7a5220,0 4px 12px rgba(0,0,0,.4)}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--gold2);box-shadow:none;font-weight:500}
+.note{margin:22px 0 0;color:var(--dim);font-size:12px;line-height:1.6}
+[hidden]{display:none!important}
+@media (max-width:420px){.box{padding:32px 20px 22px}h1{font-size:25px;letter-spacing:4px}.text{font-size:15px}}
+@media (prefers-reduced-motion:reduce){.sky,.icon{animation:none}.sky{display:none}}
+</style>
+</head>
+<body>
+<div class="sky" id="sky"></div>
+<main class="box">
+  <img class="icon" src="icon.png" alt="">
+  <h1 id="title">伺服器維修中</h1>
+  <p class="sub">網頁神領</p>
+  <div class="rule"></div>
+  <div class="text" id="text"></div>
+  <div class="until" id="until" hidden>
+    <div class="lbl">預計開放時間</div>
+    <div class="when" id="when"></div>
+    <div class="left" id="left"></div>
+  </div>
+  <p class="state" id="state" hidden><span class="dot"></span><span id="stateText"></span></p>
+  <div class="btns">
+    <a class="btn" id="play" hidden>進入遊戲</a>
+    <a class="btn" id="dc" target="_blank" rel="noopener" hidden>前往 Discord 查詢</a>
+  </div>
+  <p class="note">造成不便，敬請見諒。</p>
+</main>
+
+<script>
+/* ===== 要改公告內容，改這裡就好 =====
+   也可以直接在網址後面加參數，不用改檔案，例如：
+   .../?until=2026-11-18%2018:00&text=今天更新新地圖
+   until 寫「年-月-日 時:分」（台灣時間）會顯示倒數；寫其他文字（例如「今晚」）就照原樣顯示。 */
+const CONFIG = {
+  title: '伺服器維修中',
+  text: '此為臨時架設之維護介面。\n伺服器恢復狀況，請至 Discord 查詢。',
+  until: '',                                        // 例：'2026-11-18 18:00'，空白就不顯示
+  playUrl: '',                                      // 不偵測：Cloudflare 轉址期間偵測會被轉回這頁而誤判
+  discord: 'https://discord.gg/D3mryUceH',          // 空白就不顯示 Discord 按鈕
+  checkSeconds: 30,                                 // 多久偵測一次伺服器
+};
+/* ================================== */
+
+const $ = id => document.getElementById(id);
+const q = new URLSearchParams(location.search);
+const cfg = {...CONFIG};
+for (const k of ['title','text','until']) if (q.get(k)) cfg[k] = q.get(k).replace(/\\n/g,'\n');
+
+$('title').textContent = cfg.title;
+document.title = cfg.title + '｜網頁神領';
+$('text').textContent = cfg.text;
+if (cfg.discord) { $('dc').href = cfg.discord; $('dc').hidden = false; }
+
+// 預計開放時間：能解析成日期就倒數（當成台灣時間 UTC+8）
+const m = cfg.until.trim().match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})[ T](\d{1,2}):(\d{2})$/);
+const target = m ? Date.UTC(+m[1], m[2]-1, +m[3], m[4]-8, +m[5]) : null;
+if (cfg.until.trim()) {
+  $('until').hidden = false;
+  $('when').textContent = m ? `${+m[2]} 月 ${+m[3]} 日 ${m[4].padStart(2,'0')}:${m[5]}` : cfg.until;
+}
+function tick() {
+  if (!target) return;
+  const s = Math.floor((target - Date.now()) / 1000);
+  if (s <= 0) { $('left').textContent = '即將開放，請稍候…'; return; }
+  const d = Math.floor(s/86400), h = Math.floor(s%86400/3600), mi = Math.floor(s%3600/60), se = s%60;
+  const p = n => String(n).padStart(2,'0');
+  $('left').textContent = '剩下 ' + (d ? d + ' 天 ' : '') + `${p(h)}:${p(mi)}:${p(se)}`;
+}
+tick(); setInterval(tick, 1000);
+
+// 偵測遊戲伺服器有沒有回來（跨網域只看連不連得到）
+async function check() {
+  if (!cfg.playUrl) return;
+  $('state').hidden = false;
+  try {
+    const ctl = new AbortController(); setTimeout(() => ctl.abort(), 8000);
+    await fetch(cfg.playUrl + (cfg.playUrl.includes('?') ? '&' : '?') + '_=' + Date.now(), {mode:'no-cors', cache:'no-store', signal:ctl.signal});
+    $('state').className = 'state up';
+    $('stateText').textContent = '伺服器已經回來了，可以進入遊戲！';
+    $('play').href = cfg.playUrl; $('play').hidden = false;
+  } catch {
+    $('state').className = 'state';
+    $('stateText').textContent = '維修進行中，伺服器回來時這裡會自動顯示。';
+    $('play').hidden = true;
+  }
+}
+check(); setInterval(check, Math.max(10, cfg.checkSeconds) * 1000);
+
+// 背景光點
+const sky = $('sky');
+for (let i = 0; i < 26; i++) {
+  const e = document.createElement('i');
+  e.style.left = Math.random()*100 + '%';
+  e.style.animationDuration = (9 + Math.random()*10) + 's';
+  e.style.animationDelay = (-Math.random()*18) + 's';
+  const z = 2 + Math.random()*3; e.style.width = e.style.height = z + 'px';
+  sky.appendChild(e);
+}
+</script>
+</body>
+</html>
